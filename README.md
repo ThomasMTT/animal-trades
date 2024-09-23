@@ -1,11 +1,9 @@
-[![Build](https://github.com/ThomasMTT/animal-trades/actions/workflows/gradle.yml/badge.svg)](https://github.com/ThomasMTT/animal-trades/actions/workflows/gradle.yml)  
-[![](https://dcbadge.limes.pink/api/server/NbR9fgTYFX?style=flat)](https://discord.gg/NbR9fgTYFX)
+[![Build](https://github.com/ThomasMTT/animal-trades/actions/workflows/gradle.yml/badge.svg)](https://github.com/ThomasMTT/animal-trades/actions/workflows/gradle.yml)  [![](https://dcbadge.limes.pink/api/server/NbR9fgTYFX?style=flat)](https://discord.gg/NbR9fgTYFX)
 # Thom's Animal Trading Mod
 
-<div style="text-align: center;">
-  <!--suppress CheckImageSize -->
-<img src="https://github.com/ThomasMTT/animal-trades/logo.png" alt="Your Image" width="300">
-</div>
+<center>
+  <img src="https://github.com/ThomasMTT/animal-trades/blob/1.20.6/logo.png" alt="Your Image" width="300">
+</center>
 <br>
 
 Thom's Animal Trading mod lets you trade items with animals in Minecraft to gain special effects. Trades are customizable and can be stacked.
