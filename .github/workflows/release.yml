@@ -18,13 +18,15 @@ jobs:
         id: extract_version
         run: |
           RELEASE_NAME="${{ github.event.release.name }}"
-          LAST_VALUE=$(echo "$RELEASE_NAME" | awk '{print $NF}')  # Get the last word
+          LAST_VALUE=$(echo "$RELEASE_NAME" | awk '{print $NF}')
           echo "last_value=${LAST_VALUE}" >> $GITHUB_ENV
 
-      - name: List files in build/libs
-        run: |
-          echo "Contents of build/libs:"
-          ls -la build/libs
+      - name: Download release asset
+        id: download_asset
+        uses: actions/download-artifact@v2
+        with:
+          name: animal_trades-${{ github.event.release.tag_name }}-${{ env.last_value }}.jar
+          path: ./
 
       - name: Publish mod using mc-publish
         uses: Kir-Antipov/mc-publish@v3.3
@@ -46,10 +48,10 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
           files: |
-            build/libs/animal_trades-${{ github.event.release.tag_name }}-${{ env.last_value }}.jar
+            animal_trades-${{ github.event.release.tag_name }}-${{ env.last_value }}.jar  # Directly referencing the downloaded file
 
           name: ${{ github.event.release.name }}
-          version: ${{ env.last_value }}  # Using the last value extracted
+          version: ${{ env.last_value }}
           version-type: release
 
           changelog: ${{ github.event.release.body }}
