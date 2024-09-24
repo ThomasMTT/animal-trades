@@ -35,10 +35,11 @@ jobs:
       - name: Build with Gradle Wrapper
         run: ./gradlew build
 
-      - name: Extract last value from release name using awk
+      - name: Extract last value from release name
         id: extract_last_value
         run: |
-          LAST_VALUE=$(awk '{print $NF}' <<< "${{ github.event.release.name }}")
+          LAST_VALUE="${{ github.event.release.name }}"
+          LAST_VALUE="${LAST_VALUE##* }"  # Get last word after last space
           echo "last_value=$LAST_VALUE" >> $GITHUB_ENV
 
       - name: Upload Artifact
