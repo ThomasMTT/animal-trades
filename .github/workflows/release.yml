@@ -14,14 +14,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Extract last three values from release name
+      - name: Extract last value from release name
         id: extract_version
         run: |
           RELEASE_NAME="${{ github.event.release.name }}"
-          
-          # Use 'awk' to get the last three words from the release name
-          LAST_THREE=$(echo "$RELEASE_NAME" | awk '{for(i=NF-2;i<=NF;i++) printf $i " "; print ""}')
-          echo "last_three_version=${LAST_THREE}" >> $GITHUB_ENV
+          LAST_VALUE=$(echo "$RELEASE_NAME" | awk '{print $NF}')  # Get the last word
+          echo "last_value=${LAST_VALUE}" >> $GITHUB_ENV
+
+      - name: List files in build/libs
+        run: |
+          echo "Contents of build/libs:"
+          ls -la build/libs
 
       - name: Publish mod using mc-publish
         uses: Kir-Antipov/mc-publish@v3.3
@@ -43,10 +46,10 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
           files: |
-            build/libs/animal_trades-${{ github.event.release.tag_name }}-${{ env.last_three_version }}.jar
+            build/libs/animal_trades-${{ github.event.release.tag_name }}-${{ env.last_value }}.jar
 
           name: ${{ github.event.release.name }}
-          version: ${{ env.last_three_version }}
+          version: ${{ env.last_value }}  # Using the last value extracted
           version-type: release
 
           changelog: ${{ github.event.release.body }}
