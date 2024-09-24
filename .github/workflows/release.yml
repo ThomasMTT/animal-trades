@@ -65,6 +65,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Extract last three characters from release name
+        id: extract_version
+        run: |
+          RELEASE_NAME="${{ github.event.release.name }}"
+          LAST_THREE="${RELEASE_NAME: -3}"  # Get the last three characters
+          echo "last_three_version=$LAST_THREE" >> $GITHUB_ENV
+
       - name: Download build artifact
         uses: actions/download-artifact@v4  # Updated to v4
         with:
