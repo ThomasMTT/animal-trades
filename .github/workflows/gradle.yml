@@ -1,8 +1,7 @@
-name: Build and Publish Minecraft Mod
+name: Build
 
 on:
-  release:
-    types: [published, created]
+  push:
 
 jobs:
   build:
@@ -11,8 +10,7 @@ jobs:
       contents: read
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Set up corresponding JDK
         uses: actions/setup-java@v4
@@ -34,69 +32,3 @@ jobs:
 
       - name: Build with Gradle Wrapper
         run: ./gradlew build
-
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: animal_trades-${{ github.event.release.tag_name }}-${{ github.event.release.name | awk '{print $NF}' }}.jar
-          path: build/libs/animal_trades-${{ github.event.release.tag_name }}-*.jar  # Match the artifact name pattern
-
-  publish:
-    runs-on: ubuntu-latest
-    needs: build
-    permissions:
-      contents: write
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Download build artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: animal_trades-${{ github.event.release.tag_name }}-${{ github.event.release.name | awk '{print $NF}' }}.jar
-          path: ./  # Specify the path to save the downloaded asset
-
-      - name: Extract last three values from release name
-        id: extract_version
-        run: |
-          RELEASE_NAME="${{ github.event.release.name }}"
-          LAST_THREE=$(echo "$RELEASE_NAME" | awk '{for(i=NF-2;i<=NF;i++) printf $i " "; print ""}')
-          echo "last_three_version=${LAST_THREE}" >> $GITHUB_ENV
-
-      - name: Publish mod using mc-publish
-        uses: Kir-Antipov/mc-publish@v3.3
-        with:
-          modrinth-id: yDPoAfcm
-          modrinth-featured: false
-          modrinth-unfeature-mode: subset
-          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
-          curseforge-id: 1108180
-          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
-          github-tag: ${{ github.ref }}
-          github-generate-changelog: false
-          github-draft: false
-          github-prerelease: false
-          github-commitish: dev
-          github-discussion: Announcements
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          files: animal_trades-${{ github.event.release.tag_name }}-${{ env.last_three_version }}.jar
-          name: ${{ github.event.release.name }}
-          version: ${{ github.event.release.tag_name }}  # Use the tag as version
-          version-type: release
-          changelog: ${{ github.event.release.body }}  # Extract changelog from the release body
-          loaders: |
-            forge
-          game-versions: |
-            ${{ github.event.release.tag_name }}
-          java: |
-            ${{ github.ref == 'refs/heads/1.21.1' && '21' ||
-               github.ref == 'refs/heads/1.20.6' && '21' ||
-               github.ref == 'refs/heads/1.19.4' && '17' ||
-               github.ref == 'refs/heads/1.18.2' && '17' ||
-               github.ref == 'refs/heads/1.17.1' && '16' ||
-               github.ref == 'refs/heads/1.16.5' && '16' ||
-               '8' }}
-          retry-attempts: 2
-          retry-delay: 10000
-          fail-mode: fail
