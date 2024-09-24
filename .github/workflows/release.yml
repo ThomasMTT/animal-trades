@@ -11,37 +11,28 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v2
 
-      - name: Set up Java (if necessary for your mod)
-        uses: actions/setup-java@v2
-        with:
-          java-version: ${{ github.ref == 'refs/tags/1.21.1' && '21' ||
-            github.ref == 'refs/tags/1.20.6' && '21' ||
-            github.ref == 'refs/tags/1.19.4' && '17' ||
-            github.ref == 'refs/tags/1.18.2' && '17' ||
-            github.ref == 'refs/tags/1.17.1' && '16' ||
-            github.ref == 'refs/tags/1.16.5' && '16' ||
-            '8' }} 
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4.0.0
-
-      - name: Grant execute permission for gradlew
-        run: chmod +x ./gradlew
-
-      - name: Build with Gradle Wrapper
-        run: ./gradlew build
-
       - name: Extract Version from Tag
         id: get_version
         run: |
           echo "VERSION=${GITHUB_REF##*/}" >> $GITHUB_ENV
 
+      - name: Fetch Release Assets
+        id: fetch_assets
+        run: |
+          # Get the release data
+          release_data=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          "https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ env.VERSION }}")
+
+          # Extract the asset download URL for the desired binary (adjust filename as needed)
+          asset_url=$(echo "$release_data" | jq -r '.assets[] | select(.name | contains("animal_trades")) | .url')
+          
+          # Download the asset using the URL
+          curl -L -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -o "animal_trades-${{ env.VERSION }}.jar" "$asset_url"
+
       - name: Fetch Release Changelog
         id: get_changelog
         run: |
-          changelog=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-          "https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ env.VERSION }}" | \
-          jq -r '.body') # Adjusted to use .body instead of .[0].body
+          changelog=$(echo "$release_data" | jq -r '.body') # Fetch the changelog from the release
           echo "CHANGELOG=$changelog" >> $GITHUB_ENV
 
       - name: Publish to CurseForge
@@ -49,7 +40,7 @@ jobs:
           CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
         run: |
           mc-publish curseforge --mod-id 1108180 \
-          --file build/libs/animal_trades-${{ env.VERSION }}.jar \
+          --file "animal_trades-${{ env.VERSION }}.jar" \
           --version ${{ env.VERSION }} \
           --changelog "$CHANGELOG" # Use the fetched changelog
 
@@ -58,6 +49,6 @@ jobs:
           MODRINTH_API_KEY: ${{ secrets.MODRINTH_API_KEY }}
         run: |
           mc-publish modrinth --project-id yDPoAfcm \
-          --file build/libs/animal_trades-${{ env.VERSION }}.jar \
+          --file "animal_trades-${{ env.VERSION }}.jar" \
           --version ${{ env.VERSION }} \
           --changelog "$CHANGELOG" # Use the fetched changelog
