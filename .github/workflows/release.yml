@@ -23,10 +23,15 @@ jobs:
 
       - name: Download release asset
         id: download_asset
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3  # Updated to the latest version
         with:
           name: animal_trades-${{ github.event.release.tag_name }}-${{ env.last_value }}.jar
-          path: ./
+          path: ./  # Specify the path to save the downloaded asset
+
+      - name: List downloaded files
+        run: |
+          echo "Contents of the current directory after downloading the asset:"
+          ls -la  # List the files to verify the download
 
       - name: Publish mod using mc-publish
         uses: Kir-Antipov/mc-publish@v3.3
