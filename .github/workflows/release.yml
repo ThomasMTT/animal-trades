@@ -35,15 +35,17 @@ jobs:
       - name: Build with Gradle Wrapper
         run: ./gradlew build
 
-      - name: Extract last word from release name
+      - name: Extract last value from release name using awk
         id: extract_last_value
-        run: echo "last_value=$(echo '${{ github.event.release.name }}' | awk '{print $NF}')" >> $GITHUB_ENV
+        run: |
+          LAST_VALUE=$(awk '{print $NF}' <<< "${{ github.event.release.name }}")
+          echo "last_value=$LAST_VALUE" >> $GITHUB_ENV
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
         with:
           name: animal_trades-${{ github.event.release.tag_name }}-${{ env.last_value }}.jar
-          path: build/libs/animal_trades-${{ github.event.release.tag_name }}-*.jar  # Adjust the glob pattern if needed
+          path: build/libs/animal_trades-${{ github.event.release.tag_name }}-*.jar
 
   publish:
     runs-on: ubuntu-latest
@@ -61,9 +63,11 @@ jobs:
           name: animal_trades-${{ github.event.release.tag_name }}-${{ env.last_value }}.jar
           path: ./  # Specify the path to save the downloaded asset
 
-      - name: Extract last three values from release name
+      - name: Extract last three values from release name using awk
         id: extract_version
-        run: echo "last_three_version=$(echo '${{ github.event.release.name }}' | awk '{for(i=NF-2;i<=NF;i++) printf $i " "; print ""}')" >> $GITHUB_ENV
+        run: |
+          LAST_THREE=$(awk '{print $(NF-2), $(NF-1), $NF}' <<< "${{ github.event.release.name }}")
+          echo "last_three_version=$LAST_THREE" >> $GITHUB_ENV
 
       - name: Publish mod using mc-publish
         uses: Kir-Antipov/mc-publish@v3.3
@@ -78,7 +82,7 @@ jobs:
           github-generate-changelog: false
           github-draft: false
           github-prerelease: false
-          github-commitish: dev  # You need to get the right commit or branch
+          github-commitish: ${{ github.sha }}  # Uses commit SHA to reference the current commit
           github-discussion: Announcements
           github-token: ${{ secrets.GITHUB_TOKEN }}
           files: animal_trades-${{ github.event.release.tag_name }}-${{ env.last_three_version }}.jar
