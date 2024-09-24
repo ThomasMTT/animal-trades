@@ -49,7 +49,7 @@ jobs:
         uses: actions/upload-artifact@v4  # Updated to v4
         with:
           name: animal_trades-${{ github.event.release.tag_name }}-${{ env.last_value }}.jar
-          path: build/libs/animal_trades-${{ github.event.release.tag_name }}-${{ env.last_value }}.jar
+          path: ./build/libs/animal_trades-${{ github.event.release.tag_name }}-${{ env.last_value }}.jar
 
   publish:
     runs-on: ubuntu-latest
@@ -85,7 +85,7 @@ jobs:
         uses: actions/upload-release-asset@v1  # You may want to check for the latest version
         with:
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: animal_trades-${{ github.event.release.tag_name }}-${{ env.last_value }}.jar
+          asset_path: ./animal_trades-${{ github.event.release.tag_name }}-${{ env.last_value }}.jar
           asset_name: animal_trades-${{ github.event.release.tag_name }}-${{ env.last_value }}.jar
           asset_content_type: application/java-archive
 
