@@ -35,11 +35,18 @@ jobs:
       - name: Build with Gradle Wrapper
         run: ./gradlew build
 
+      - name: Extract last part of release name
+        id: extract_last_value
+        run: |
+          RELEASE_NAME="${{ github.event.release.name }}"
+          LAST_VALUE=$(echo "$RELEASE_NAME" | awk '{print $NF}')
+          echo "last_value=${LAST_VALUE}" >> $GITHUB_ENV
+
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: animal_trades-${{ github.event.release.tag_name }}-${{ github.event.release.name | awk '{print $NF}' }}.jar
-          path: build/libs/animal_trades-${{ github.event.release.tag_name }}-*.jar  # Match the artifact name pattern
+          name: animal_trades-${{ github.event.release.tag_name }}-${{ env.last_value }}.jar
+          path: build/libs/animal_trades-${{ github.event.release.tag_name }}-*.jar
 
   publish:
     runs-on: ubuntu-latest
@@ -54,7 +61,7 @@ jobs:
       - name: Download build artifact
         uses: actions/download-artifact@v3
         with:
-          name: animal_trades-${{ github.event.release.tag_name }}-${{ github.event.release.name | awk '{print $NF}' }}.jar
+          name: animal_trades-${{ github.event.release.tag_name }}-${{ env.last_value }}.jar
           path: ./  # Specify the path to save the downloaded asset
 
       - name: Extract last three values from release name
@@ -80,7 +87,7 @@ jobs:
           github-commitish: dev
           github-discussion: Announcements
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          files: animal_trades-${{ github.event.release.tag_name }}-${{ env.last_three_version }}.jar
+          files: animal_trades-${{ github.event.release.tag_name }}-${{ env.last_three_version }}.jar  # Ensure this matches the uploaded artifact
           name: ${{ github.event.release.name }}
           version: ${{ github.event.release.tag_name }}  # Use the tag as version
           version-type: release
