@@ -14,7 +14,7 @@ jobs:
       - name: Extract Version from Tag
         id: get_version
         run: |
-          echo "VERSION=${GITHUB_REF##*/}" >> $GITHUB_ENV
+          echo "VERSION=${{ github.event.release.tag_name }}" >> $GITHUB_ENV
 
       - name: Fetch Release Assets
         id: fetch_assets
@@ -25,6 +25,12 @@ jobs:
 
           # Extract the asset download URL for the desired binary (adjust filename as needed)
           asset_url=$(echo "$release_data" | jq -r '.assets[] | select(.name | contains("animal_trades")) | .url')
+
+          # Check if asset_url is empty
+          if [ -z "$asset_url" ]; then
+            echo "No asset found for the specified version."
+            exit 1
+          fi
           
           # Download the asset using the URL
           curl -L -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -o "animal_trades-${{ env.VERSION }}.jar" "$asset_url"
