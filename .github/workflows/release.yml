@@ -38,7 +38,7 @@ jobs:
       - name: Build with Gradle Wrapper
         run: |
           ./gradlew jar
-          ls -la
+          ls -la ./build/libs/
 
       - name: Extract last value from release name
         id: extract_last_value
