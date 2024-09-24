@@ -1,8 +1,8 @@
 name: Publish Mod
 
 on:
-  release:
-    types: [created] # Triggers the workflow only when a release is created
+  registry_package:
+    types: [published]
 
 jobs:
   publish:
