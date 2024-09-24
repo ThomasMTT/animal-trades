@@ -114,7 +114,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           files: animal_trades-${{ github.event.release.tag_name }}-${{ env.last_three_version }}.jar
           name: ${{ github.event.release.name }}
-          version: ${{ github.event.release.tag_name }}  # Use the tag as version
+          version: ${{ github.event.release.tag_name }}-${{ env.last_value }}  # Use the tag as version
           version-type: release
           changelog: ${{ github.event.release.body }}  # Extract changelog from the release body
           loaders: |
@@ -122,12 +122,12 @@ jobs:
           game-versions: |
             ${{ github.event.release.tag_name }}
           java: |
-            ${{ github.ref == 'refs/heads/1.21.1' && '21' ||
-               github.ref == 'refs/heads/1.20.6' && '21' ||
-               github.ref == 'refs/heads/1.19.4' && '17' ||
-               github.ref == 'refs/heads/1.18.2' && '17' ||
-               github.ref == 'refs/heads/1.17.1' && '16' ||
-               github.ref == 'refs/heads/1.16.5' && '16' ||
+            ${{ github.ref == 'refs/tags/1.21.1' && '21' ||
+               github.ref == 'refs/tags/1.20.6' && '21' ||
+               github.ref == 'refs/tags/1.19.4' && '17' ||
+               github.ref == 'refs/tags/1.18.2' && '17' ||
+               github.ref == 'refs/tags/1.17.1' && '16' ||
+               github.ref == 'refs/tags/1.16.5' && '16' ||
                '8' }}
           retry-attempts: 2
           retry-delay: 10000
