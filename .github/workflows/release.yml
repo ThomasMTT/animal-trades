@@ -1,76 +1,70 @@
-name: Publish Mod
+name: Publish Minecraft Mod
 
 on:
   release:
     types: [published, created]
 
 jobs:
-  publish:
+  build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
     steps:
-      - name: Checkout Repository
+      - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Extract Version from Tag
-        id: get_version
-        run: |
-          echo "VERSION=${{ github.event.release.tag_name }}" >> $GITHUB_ENV
-          echo "Extracted version: $VERSION"
+      - name: Publish mod using mc-publish
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          modrinth-id: yDPoAfcm
+          modrinth-featured: false
+          modrinth-unfeature-mode: subset
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
 
-      - name: Extract Last 3 Characters from Title
-        id: get_last_3_chars
-        run: |
-          TITLE="${{ github.event.release.name }}"
-          LAST_3_CHARS="${TITLE: -3}"
-          echo "LAST_3_CHARS=$LAST_3_CHARS" >> $GITHUB_ENV
-          echo "Last 3 characters from title: $LAST_3_CHARS"
+          curseforge-id: 1108180
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
 
-      - name: Fetch Release Assets
-        id: fetch_assets
-        run: |
-          # Get the release data
-          release_data=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-          "https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ env.VERSION }}")
+          github-tag: ${{ github.event.release.tag_name }}
+          github-generate-changelog: false
+          github-draft: false
+          github-prerelease: false
+          github-commitish: ${{ github.event.release.target_commitish }}
+          github-discussion: Announcements
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
-          # Debug: Print the release data
-          echo "Release data: $release_data"
+          files: |
+            build/libs/animal_trades-${{ github.event.release.tag_name }}-${{ github.event.release.name.split(" ")[-1] }}.jar
 
-          # Extract the asset download URL for the desired binary (adjust filename as needed)
-          asset_url=$(echo "$release_data" | jq -r '.assets[] | select(.name | contains("animal_trades")) | .url')
+          name: ${{ github.event.release.name }}
+          version: ${{ github.event.release.name.split(" ")[-1] }}
+          version-type: release
 
-          # Debug: Print the asset URL
-          echo "Asset URL: $asset_url"
-          
-          # Check if asset_url is empty
-          if [ -z "$asset_url" ]; then
-            echo "No asset found for the specified version."
-            exit 1
-          fi
-          
-          # Download the asset using the URL
-          curl -L -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -o "animal_trades-${{ env.VERSION }}.jar" "$asset_url"
+          changelog: ${{ github.event.release.body }}
 
-      - name: Fetch Release Changelog
-        id: get_changelog
-        run: |
-          changelog=$(echo "$release_data" | jq -r '.body') # Fetch the changelog from the release
-          echo "CHANGELOG: $changelog" # Debug output
-          echo "CHANGELOG=$changelog" >> $GITHUB_ENV
+          loaders: |
+            forge
 
-      - name: Publish to CurseForge
-        env:
-          CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
-        run: |
-          mc-publish curseforge --mod-id 1108180 \
-          --file "animal_trades-${{ env.VERSION }}-${{ env.LAST_3_CHARS }}.jar" \
-          --version ${{ env.VERSION }} \
-          --changelog "$CHANGELOG" # Use the fetched changelog
+          game-versions: |
+            ${{ github.event.release.tag_name }}
 
-      - name: Publish to Modrinth
-        env:
-          MODRINTH_API_KEY: ${{ secrets.MODRINTH_API_KEY }}
-        run: |
-          mc-publish modrinth --project-id yDPoAfcm \
-          --file "animal_trades-${{ env.VERSION }}-${{ env.LAST_3_CHARS }}.jar" \
-          --version ${{ env.VERSION }} \
-          --changelog "$CHANGELOG" # Use the fetched changelog
+          dependencies: |
+            required-dependency
+            optional-dependency@0.1.0(optional)
+            recommended-dependency@0.2.0(recommended)
+            embedded-dependency@0.3.0(embedded)
+            conflicting-dependency(conflicting)
+            incompatible-dependency(incompatible)
+
+          java: |
+            ${{ github.ref == 'refs/heads/1.21.1' && '21' ||
+               github.ref == 'refs/heads/1.20.6' && '21' ||
+               github.ref == 'refs/heads/1.19.4' && '17' ||
+               github.ref == 'refs/heads/1.18.2' && '17' ||
+               github.ref == 'refs/heads/1.17.1' && '16' ||
+               github.ref == 'refs/heads/1.16.5' && '16' ||
+               '8' }}
+
+          retry-attempts: 2
+          retry-delay: 10000
+          fail-mode: fail
