@@ -17,10 +17,11 @@ jobs:
       - name: Extract last three values from release name
         id: extract_version
         run: |
-          # Split the release name into an array and get the last three elements
-          IFS=' ' read -ra ADDR <<< "${{ github.event.release.name }}"
-          LAST_THREE="${ADDR[-3]} ${ADDR[-2]} ${ADDR[-1]}"
-          echo "last_three_version=$LAST_THREE" >> $GITHUB_ENV
+          RELEASE_NAME="${{ github.event.release.name }}"
+          
+          # Use 'awk' to get the last three words from the release name
+          LAST_THREE=$(echo "$RELEASE_NAME" | awk '{for(i=NF-2;i<=NF;i++) printf $i " "; print ""}')
+          echo "last_three_version=${LAST_THREE}" >> $GITHUB_ENV
 
       - name: Publish mod using mc-publish
         uses: Kir-Antipov/mc-publish@v3.3
