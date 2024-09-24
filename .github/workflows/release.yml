@@ -39,24 +39,13 @@ jobs:
         id: extract_last_value
         run: |
           LAST_VALUE="${{ github.event.release.name }}"
-          echo "Release name: $LAST_VALUE"
           LAST_VALUE="${LAST_VALUE##* }"  # Get last word after last space
-          echo "Extracted last value: $LAST_VALUE"
           echo "last_value=$LAST_VALUE" >> $GITHUB_ENV
-          echo "::set-output name=last_value::$LAST_VALUE"  # Set as output
-
-      - name: Extract last three characters from release name
-        id: extract_version
-        run: |
-          RELEASE_NAME="${{ github.event.release.name }}"
-          LAST_THREE="${RELEASE_NAME: -3}"  # Get the last three characters
-          echo "Extracted last three characters: $LAST_THREE"
-          echo "::set-output name=last_three_version::$LAST_THREE"  # Set as output
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4  # Updated to v4
         with:
-          name: animal_trades-${{ github.event.release.tag_name }}-${{ steps.extract_last_value.outputs.last_value }}.jar
+          name: animal_trades-${{ github.event.release.tag_name }}-${{ env.last_value }}.jar
           path: build/libs/animal_trades-${{ github.event.release.tag_name }}-*.jar
 
   publish:
@@ -69,10 +58,24 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Extract last value from release name
+        id: extract_last_value_publish
+        run: |
+          LAST_VALUE="${{ github.event.release.name }}"
+          LAST_VALUE="${LAST_VALUE##* }"  # Get last word after last space
+          echo "last_value=$LAST_VALUE" >> $GITHUB_ENV
+
+      - name: Extract last three characters from release name
+        id: extract_version
+        run: |
+          RELEASE_NAME="${{ github.event.release.name }}"
+          LAST_THREE="${RELEASE_NAME: -3}"  # Get the last three characters
+          echo "last_three_version=$LAST_THREE" >> $GITHUB_ENV
+
       - name: Download build artifact
         uses: actions/download-artifact@v4  # Updated to v4
         with:
-          name: animal_trades-${{ github.event.release.tag_name }}-${{ needs.build.outputs.last_value }}.jar
+          name: animal_trades-${{ github.event.release.tag_name }}-${{ env.last_value }}.jar
           path: ./  # Specify the path to save the downloaded asset
 
       - name: Publish mod using mc-publish
@@ -91,7 +94,7 @@ jobs:
           github-commitish: ${{ github.sha }}  # Uses commit SHA to reference the current commit
           github-discussion: Announcements
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          files: animal_trades-${{ github.event.release.tag_name }}-${{ needs.build.outputs.last_three_version }}.jar
+          files: animal_trades-${{ github.event.release.tag_name }}-${{ env.last_three_version }}.jar
           name: ${{ github.event.release.name }}
           version: ${{ github.event.release.tag_name }}  # Use the tag as version
           version-type: release
