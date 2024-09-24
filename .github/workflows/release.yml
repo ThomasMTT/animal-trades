@@ -63,6 +63,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
 
       - name: Extract last value from release name
         id: extract_last_value_publish
@@ -85,12 +87,13 @@ jobs:
           path: ./  # Specify the path to save the downloaded asset
 
       - name: Upload artifact to GitHub Release
-        uses: actions/upload-release-asset@v1  # You may want to check for the latest version
+        uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ github.event.release.upload_url }}
           asset_path: ./animal_trades-${{ github.event.release.tag_name }}-${{ env.last_value }}.jar
           asset_name: animal_trades-${{ github.event.release.tag_name }}-${{ env.last_value }}.jar
           asset_content_type: application/java-archive
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish mod using mc-publish
         uses: Kir-Antipov/mc-publish@v3.3
