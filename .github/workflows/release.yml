@@ -35,18 +35,15 @@ jobs:
       - name: Build with Gradle Wrapper
         run: ./gradlew build
 
-      - name: Extract last part of release name
+      - name: Extract last word from release name
         id: extract_last_value
-        run: |
-          RELEASE_NAME="${{ github.event.release.name }}"
-          LAST_VALUE=$(echo "$RELEASE_NAME" | awk '{print $NF}')
-          echo "last_value=${LAST_VALUE}" >> $GITHUB_ENV
+        run: echo "last_value=$(echo '${{ github.event.release.name }}' | awk '{print $NF}')" >> $GITHUB_ENV
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
         with:
           name: animal_trades-${{ github.event.release.tag_name }}-${{ env.last_value }}.jar
-          path: build/libs/animal_trades-${{ github.event.release.tag_name }}-*.jar
+          path: build/libs/animal_trades-${{ github.event.release.tag_name }}-*.jar  # Adjust the glob pattern if needed
 
   publish:
     runs-on: ubuntu-latest
@@ -66,10 +63,7 @@ jobs:
 
       - name: Extract last three values from release name
         id: extract_version
-        run: |
-          RELEASE_NAME="${{ github.event.release.name }}"
-          LAST_THREE=$(echo "$RELEASE_NAME" | awk '{for(i=NF-2;i<=NF;i++) printf $i " "; print ""}')
-          echo "last_three_version=${LAST_THREE}" >> $GITHUB_ENV
+        run: echo "last_three_version=$(echo '${{ github.event.release.name }}' | awk '{for(i=NF-2;i<=NF;i++) printf $i " "; print ""}')" >> $GITHUB_ENV
 
       - name: Publish mod using mc-publish
         uses: Kir-Antipov/mc-publish@v3.3
@@ -84,10 +78,10 @@ jobs:
           github-generate-changelog: false
           github-draft: false
           github-prerelease: false
-          github-commitish: dev
+          github-commitish: dev  # You need to get the right commit or branch
           github-discussion: Announcements
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          files: animal_trades-${{ github.event.release.tag_name }}-${{ env.last_three_version }}.jar  # Ensure this matches the uploaded artifact
+          files: animal_trades-${{ github.event.release.tag_name }}-${{ env.last_three_version }}.jar
           name: ${{ github.event.release.name }}
           version: ${{ github.event.release.tag_name }}  # Use the tag as version
           version-type: release
