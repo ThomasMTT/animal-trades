@@ -15,6 +15,15 @@ jobs:
         id: get_version
         run: |
           echo "VERSION=${{ github.event.release.tag_name }}" >> $GITHUB_ENV
+          echo "Extracted version: $VERSION"
+
+      - name: Extract Last 3 Characters from Title
+        id: get_last_3_chars
+        run: |
+          TITLE="${{ github.event.release.name }}"
+          LAST_3_CHARS="${TITLE: -3}"
+          echo "LAST_3_CHARS=$LAST_3_CHARS" >> $GITHUB_ENV
+          echo "Last 3 characters from title: $LAST_3_CHARS"
 
       - name: Fetch Release Assets
         id: fetch_assets
@@ -23,9 +32,15 @@ jobs:
           release_data=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
           "https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ env.VERSION }}")
 
+          # Debug: Print the release data
+          echo "Release data: $release_data"
+
           # Extract the asset download URL for the desired binary (adjust filename as needed)
           asset_url=$(echo "$release_data" | jq -r '.assets[] | select(.name | contains("animal_trades")) | .url')
 
+          # Debug: Print the asset URL
+          echo "Asset URL: $asset_url"
+          
           # Check if asset_url is empty
           if [ -z "$asset_url" ]; then
             echo "No asset found for the specified version."
@@ -39,6 +54,7 @@ jobs:
         id: get_changelog
         run: |
           changelog=$(echo "$release_data" | jq -r '.body') # Fetch the changelog from the release
+          echo "CHANGELOG: $changelog" # Debug output
           echo "CHANGELOG=$changelog" >> $GITHUB_ENV
 
       - name: Publish to CurseForge
@@ -46,7 +62,7 @@ jobs:
           CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
         run: |
           mc-publish curseforge --mod-id 1108180 \
-          --file "animal_trades-${{ env.VERSION }}.jar" \
+          --file "animal_trades-${{ env.VERSION }}-${{ env.LAST_3_CHARS }}.jar" \
           --version ${{ env.VERSION }} \
           --changelog "$CHANGELOG" # Use the fetched changelog
 
@@ -55,6 +71,6 @@ jobs:
           MODRINTH_API_KEY: ${{ secrets.MODRINTH_API_KEY }}
         run: |
           mc-publish modrinth --project-id yDPoAfcm \
-          --file "animal_trades-${{ env.VERSION }}.jar" \
+          --file "animal_trades-${{ env.VERSION }}-${{ env.LAST_3_CHARS }}.jar" \
           --version ${{ env.VERSION }} \
           --changelog "$CHANGELOG" # Use the fetched changelog
