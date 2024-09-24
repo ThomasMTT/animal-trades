@@ -2,7 +2,7 @@ name: Build and Publish Minecraft Mod
 
 on:
   release:
-    types: [published, created, edited]
+    types: [published]
 
 jobs:
   build:
